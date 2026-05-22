@@ -1,26 +1,25 @@
-import { useState } from 'react'
-import './App.css'
+import { useState } from "react";
+import "./App.css";
 
 function Square(props) {
   return (
-    <button className="square" onClick={props.onClick}>
+    <button className="square" data-value={props.value || ''} onClick={props.onClick}>
       {props.value}
     </button>
   );
 }
 
 function Board() {
-  const [squares, setSquares] = useState(Array(9).fill(null))
-  const [xIsNext, setXIsNext] = useState(true)
+  const [squares, setSquares] = useState(Array(9).fill(null));
+  const [xIsNext, setXIsNext] = useState(true);
 
-  const handleClick = (i) => {  
-    const newSquares = squares.slice()
-    if (calculateWinner(newSquares) || newSquares[i]) return
-    newSquares[i] = xIsNext ? 'X' : 'O'
-    setSquares(newSquares)
-    setXIsNext(!xIsNext)
-
-  }
+  const handleClick = (i) => {
+    const newSquares = squares.slice();
+    if (calculateWinner(newSquares) || newSquares[i]) return;
+    newSquares[i] = xIsNext ? "X" : "O";
+    setSquares(newSquares);
+    setXIsNext(!xIsNext);
+  };
 
   const calculateWinner = (squares) => {
     const lines = [
@@ -32,22 +31,26 @@ function Board() {
       [2, 5, 8],
       [0, 4, 8],
       [2, 4, 6],
-    ]
+    ];
 
     for (let i = 0; i < lines.length; i++) {
-      const [a, b, c] = lines[i]
-      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-        return squares[a]
+      const [a, b, c] = lines[i];
+      if (
+        squares[a] &&
+        squares[a] === squares[b] &&
+        squares[a] === squares[c]
+      ) {
+        return squares[a];
       }
     }
-    return null
-  }
+    return null;
+  };
 
-
-  const winner = calculateWinner(squares)
-  let status
-  if (winner) status = 'Winner: ' + winner
-  else status = 'Next player: ' + (xIsNext ? 'X' : 'O')
+  const winner = calculateWinner(squares);
+  let status;
+  if (winner) status = "Winner: " + winner;
+  else if (squares.every(square => square !== null)) status = "It's a draw!";
+  else status = "Next player: " + (xIsNext ? "X" : "O");
 
   return (
     <>
@@ -56,10 +59,10 @@ function Board() {
         <Square value={squares[0]} onClick={() => handleClick(0)} />
         <Square value={squares[1]} onClick={() => handleClick(1)} />
         <Square value={squares[2]} onClick={() => handleClick(2)} />
-      </div>  
+      </div>
       <div className="board-row">
         <Square value={squares[3]} onClick={() => handleClick(3)} />
-        <Square value={squares[4]} onClick={() => handleClick(4)} />    
+        <Square value={squares[4]} onClick={() => handleClick(4)} />
         <Square value={squares[5]} onClick={() => handleClick(5)} />
       </div>
       <div className="board-row">
@@ -67,17 +70,23 @@ function Board() {
         <Square value={squares[7]} onClick={() => handleClick(7)} />
         <Square value={squares[8]} onClick={() => handleClick(8)} />
       </div>
+      <button className="reset-button" onClick={() => {
+        setSquares(Array(9).fill(null));
+        setXIsNext(true);
+      }}>
+       
+       <span>Reset</span>
+      </button>
     </>
-  )
-}  
-
-function App() {
-
-  return (
-    <>
-     <Board />
-    </>
-  )
+  );
 }
 
-export default App
+function App() {
+  return (
+    <>
+      <Board />
+    </>
+  );
+}
+
+export default App;

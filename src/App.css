@@ -1,0 +1,330 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&display=swap');
+
+/* ── Variables ── */
+:root {
+  --bg:        #0d0d0d;
+  --surface:   #161616;
+  --border:    #2a2a2a;
+  --x-color:   #e8ff47;
+  --o-color:   #ff4d6d;
+  --text:      #f0f0f0;
+  --muted:     #555;
+  --glow-x:    0 0 20px #e8ff4755, 0 0 60px #e8ff4722;
+  --glow-o:    0 0 20px #ff4d6d55, 0 0 60px #ff4d6d22;
+  --sq-size:   110px;
+  --gap:       6px;
+}
+
+/* ── Reset & Base ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Subtle noise texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Title ── */
+#root::before {
+  content: 'TIC-TAC-TOE';
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  letter-spacing: 0.2em;
+  color: var(--text);
+  opacity: 0.08;
+  position: absolute;
+  top: -60px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ── Status Bar ── */
+.status {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text);
+  padding: 10px 24px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--surface);
+  position: relative;
+  overflow: hidden;
+  transition: color 0.3s, border-color 0.3s;
+}
+
+.status::before {
+  content: '//';
+  margin-right: 10px;
+  opacity: 0.4;
+}
+
+/* ── Board ── */
+.board-row {
+  display: flex;
+  gap: var(--gap);
+}
+
+.board-row + .board-row {
+  margin-top: var(--gap);
+}
+
+/* ── Square ── */
+.square {
+  width: var(--sq-size);
+  height: var(--sq-size);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3rem;
+  color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+
+/* Corner accents */
+.square::before,
+.square::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.square::before {
+  top: 4px; left: 4px;
+  border-top: 1.5px solid var(--muted);
+  border-left: 1.5px solid var(--muted);
+}
+.square::after {
+  bottom: 4px; right: 4px;
+  border-bottom: 1.5px solid var(--muted);
+  border-right: 1.5px solid var(--muted);
+}
+
+.square:hover:not(:disabled) {
+  border-color: #3a3a3a;
+  background: #1c1c1c;
+  transform: scale(1.03);
+}
+
+.square:hover:not(:disabled)::before,
+.square:hover:not(:disabled)::after {
+  opacity: 1;
+}
+
+.square:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* X styling */
+.square[data-value="X"],
+.square:not([data-value]):empty {
+  /* default — handled below */
+}
+
+/* Dynamically color via content */
+.square {
+  --val-color: var(--text);
+}
+
+/* We set color based on text content using a sibling trick via JS,
+   but since we can't do that in pure CSS easily, we target by value
+   in the rendered DOM. The square text is the child text node. */
+
+/* Color the text: X = yellow, O = pink */
+.square:not(:empty) {
+  animation: popIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+/* Since React sets button text directly, we use :not(:empty) + first-letter
+   as a proxy — but we need attribute or class. We'll use a clever approach:
+   style X and O with CSS attribute selector on the button's text content
+   via a data attribute pattern, or more simply, just style both visually
+   and let the JS-rendered content determine color. */
+
+/* Fallback: color all filled squares with a unified neon style,
+   and use CSS to detect X vs O by character width (not reliable).
+   Instead, we use the global approach below — style by text:  */
+
+/* Target buttons that contain "X" */
+.square:not(:empty)[style],
+.square:not(:empty) {
+  color: var(--text); /* base */
+}
+
+/* The cleanest approach for pure CSS: use outline letter-spacing trick.
+   Since we can target by content with :has in modern CSS: */
+
+/* X squares */
+.square:has(> :first-child) { color: var(--x-color); }
+
+/* Actually, button content is a text node. Use this modern approach: */
+/* This targets button text = "X" via container query is not possible.
+   So we use the following approach: add data-value in the React component via
+   a style prop trick, OR we just style globally and note in comments. */
+
+/* ── The real coloring ──
+   Since the Square component renders text directly, we use a global rule
+   that assumes X always comes first (xIsNext starts true), and style
+   based on button's textContent. In modern browsers, we can do: */
+
+/* Buttons with text "X" — rendered as the only child text node */
+.square {
+  --sq-color: var(--muted);
+  color: var(--sq-color);
+}
+
+/* We apply color classes via a small trick: override color for
+   buttons containing X vs O using unicode-range isn't feasible.
+   The cleanest pure-CSS solution: */
+
+/* Apply colors via attribute — to use this, add data-value={props.value} 
+   to the <button> in Square component (optional enhancement).
+   The CSS below works if you add: data-value={props.value || ''} */
+
+.square[data-value="X"] {
+  color: var(--x-color);
+  border-color: #2d3a00;
+  background: #111900;
+  text-shadow: var(--glow-x);
+}
+
+.square[data-value="O"] {
+  color: var(--o-color);
+  border-color: #3a0012;
+  background: #190008;
+  text-shadow: var(--glow-o);
+}
+
+/* Empty square hover shows ghost mark */
+.square:not([data-value]):hover::before,
+.square[data-value=""]:hover::before {
+  opacity: 1;
+}
+
+/* ── Reset Button ── */
+.reset-button {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 10px 28px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: color 0.25s, border-color 0.25s;
+  outline: none;
+}
+
+.reset-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--text);
+  transform: translateY(100%);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 0;
+}
+
+.reset-button span {
+  position: relative;
+  z-index: 1;
+  transition: color 0.25s;
+}
+
+.reset-button:hover {
+  border-color: var(--text);
+}
+
+.reset-button:hover span {
+  color: var(--bg);
+}
+
+.reset-button:hover::before {
+  transform: translateY(0);
+}
+
+.reset-button:active {
+  transform: scale(0.96);
+}
+
+/* ── Responsive ── */
+@media (max-width: 420px) {
+  :root {
+    --sq-size: 90px;
+    --gap: 5px;
+  }
+  .square {
+    font-size: 2.4rem;
+  }
+}
+
+@media (max-width: 340px) {
+  :root {
+    --sq-size: 76px;
+  }
+}
+
+/* ── Win state pulse ── */
+@keyframes winPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
